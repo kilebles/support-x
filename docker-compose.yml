@@ -6,4 +6,6 @@ services:
     env_file:
       - .env
     volumes:
+      - ./app:/app/app
       - ./images:/app/images:ro
+    command: python -m watchfiles --filter python "python -m app.main" /app/app

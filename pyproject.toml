@@ -10,7 +10,8 @@ requires-python = ">=3.13, <3.15"
 dependencies = [
     "aiofiles (==24.1.0)",
     "aiogram (>=3.23.0,<4.0.0)",
-    "pydantic-settings (>=2.12.0,<3.0.0)"
+    "pydantic-settings (>=2.12.0,<3.0.0)",
+    "watchfiles (>=1.0.0,<2.0.0)"
 ]
 
 
