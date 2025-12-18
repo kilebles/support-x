@@ -10,7 +10,7 @@ from aiogram.types import (
     FSInputFile,
 )
 
-from settings import SUPPORT_CHAT_ID, IMAGES_DIR
+from app.settings import SUPPORT_CHAT_ID, IMAGES_DIR
 
 
 router = Router()
