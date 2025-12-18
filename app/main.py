@@ -3,7 +3,7 @@ import asyncio
 from aiogram import Bot, Dispatcher
 
 from settings import TOKEN
-from handlers import router, set_commands
+from app.handlers import router, set_commands
 
 
 async def main():
