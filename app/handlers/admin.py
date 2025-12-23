@@ -1,6 +1,8 @@
+from typing import List, Optional
+
 from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
-from aiogram.types import Message, CallbackQuery
+from aiogram.types import Message, CallbackQuery, InputMediaPhoto, InputMediaVideo
 
 from app.keyboards import get_user_response_keyboard
 from app.handlers.states import RequestStates
@@ -20,6 +22,54 @@ async def handle_reply(callback_query: CallbackQuery, state: FSMContext):
     await state.set_state(RequestStates.waiting_for_user_response)
 
 
+@router.message(RequestStates.waiting_for_user_response, F.photo, F.media_group_id)
+async def process_admin_response_media_group(message: Message, state: FSMContext, album: Optional[List[Message]] = None):
+    """Process admin response with multiple photos (media group) and send to user."""
+    if not album:
+        album = [message]
+
+    data = await state.get_data()
+    user_id = data.get("user_id")
+
+    caption_text = ""
+    for msg in album:
+        if msg.caption:
+            caption_text = msg.caption
+            break
+
+    media = []
+    for i, msg in enumerate(album):
+        if msg.photo:
+            if i == 0:
+                media.append(InputMediaPhoto(
+                    media=msg.photo[-1].file_id,
+                    caption=caption_text if caption_text else None
+                ))
+            else:
+                media.append(InputMediaPhoto(media=msg.photo[-1].file_id))
+        elif msg.video:
+            if i == 0:
+                media.append(InputMediaVideo(
+                    media=msg.video.file_id,
+                    caption=caption_text if caption_text else None
+                ))
+            else:
+                media.append(InputMediaVideo(media=msg.video.file_id))
+
+    await message.bot.send_media_group(
+        chat_id=user_id,
+        media=media
+    )
+    await message.bot.send_message(
+        chat_id=user_id,
+        text="Ответ от поддержки (медиа выше)",
+        reply_markup=get_user_response_keyboard(user_id)
+    )
+    await message.answer("Ответ успешно отправлен пользователю.")
+
+    await state.clear()
+
+
 @router.message(RequestStates.waiting_for_user_response, F.photo)
 async def process_admin_response_photo(message: Message, state: FSMContext):
     """Process admin response with photo and send to user."""
@@ -29,6 +79,76 @@ async def process_admin_response_photo(message: Message, state: FSMContext):
     await message.bot.send_photo(
         chat_id=user_id,
         photo=message.photo[-1].file_id,
+        caption=message.caption,
+        reply_markup=get_user_response_keyboard(user_id)
+    )
+    await message.answer("Ответ успешно отправлен пользователю.")
+
+    await state.clear()
+
+
+@router.message(RequestStates.waiting_for_user_response, F.voice)
+async def process_admin_response_voice(message: Message, state: FSMContext):
+    """Process admin response with voice message and send to user."""
+    data = await state.get_data()
+    user_id = data.get("user_id")
+
+    await message.bot.send_voice(
+        chat_id=user_id,
+        voice=message.voice.file_id,
+        reply_markup=get_user_response_keyboard(user_id)
+    )
+    await message.answer("Ответ успешно отправлен пользователю.")
+
+    await state.clear()
+
+
+@router.message(RequestStates.waiting_for_user_response, F.video)
+async def process_admin_response_video(message: Message, state: FSMContext):
+    """Process admin response with video and send to user."""
+    data = await state.get_data()
+    user_id = data.get("user_id")
+
+    await message.bot.send_video(
+        chat_id=user_id,
+        video=message.video.file_id,
+        caption=message.caption,
+        reply_markup=get_user_response_keyboard(user_id)
+    )
+    await message.answer("Ответ успешно отправлен пользователю.")
+
+    await state.clear()
+
+
+@router.message(RequestStates.waiting_for_user_response, F.video_note)
+async def process_admin_response_video_note(message: Message, state: FSMContext):
+    """Process admin response with video note and send to user."""
+    data = await state.get_data()
+    user_id = data.get("user_id")
+
+    await message.bot.send_video_note(
+        chat_id=user_id,
+        video_note=message.video_note.file_id
+    )
+    await message.bot.send_message(
+        chat_id=user_id,
+        text="Ответ от поддержки (кружочек выше)",
+        reply_markup=get_user_response_keyboard(user_id)
+    )
+    await message.answer("Ответ успешно отправлен пользователю.")
+
+    await state.clear()
+
+
+@router.message(RequestStates.waiting_for_user_response, F.document)
+async def process_admin_response_document(message: Message, state: FSMContext):
+    """Process admin response with document and send to user."""
+    data = await state.get_data()
+    user_id = data.get("user_id")
+
+    await message.bot.send_document(
+        chat_id=user_id,
+        document=message.document.file_id,
         caption=message.caption,
         reply_markup=get_user_response_keyboard(user_id)
     )

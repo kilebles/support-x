@@ -5,15 +5,17 @@ from aiogram.client.default import DefaultBotProperties
 
 from app.settings import TOKEN
 from app.handlers import router, set_commands
+from app.middlewares import AlbumMiddleware
 
 
 async def main():
     bot = Bot(
-        token=TOKEN, 
+        token=TOKEN,
         default=DefaultBotProperties(parse_mode='HTML')
     )
-    
+
     dp = Dispatcher()
+    dp.message.middleware(AlbumMiddleware())
     dp.include_router(router)
 
     await set_commands(bot)
